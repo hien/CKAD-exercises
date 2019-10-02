@@ -3,6 +3,8 @@
 
 ## Liveness and readiness probes
 
+kubernetes.io > Documentation > Tasks > Configure Pods and Containers > [Configure Liveness and Readiness Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)
+
 ### Create an nginx pod with a liveness probe that just runs the command 'ls'. Save its YAML in pod.yaml. Run it, check its probe status, delete it.
 
 <details><summary>show</summary>
@@ -113,7 +115,7 @@ spec:
     name: nginx
     resources: {}
     ports:
-      - containerPort: 80
+      - containerPort: 80 # Note: Readiness probes runs on the container during its whole lifecycle. Since nginx exposes 80, containerPort: 80 is not required for readiness to work.
     readinessProbe: # declare the readiness probe
       httpGet: # add this line
         path: / #
@@ -182,7 +184,7 @@ kubectl delete po busybox --force --grace-period=0
 </p>
 </details>
 
-### Get CPU/memory utilization for nodes (heapster must be running)
+### Get CPU/memory utilization for nodes ([metrics-server](https://github.com/kubernetes-incubator/metrics-server) must be running)
 
 <details><summary>show</summary>
 <p>

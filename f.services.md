@@ -41,9 +41,18 @@ exit
 ```
 
 </p>
+or
+<p>
+
+```bash
+IP=$(kubectl get svc nginx --template={{.spec.clusterIP}}) # get the IP (something like 10.108.93.130)
+kubectl run busybox --rm --image=busybox -it --restart=Never --env="IP=$IP" -- wget -O- $IP:80
+```
+
+</p>
 </details>
 
-### Convert the ClusterIP to NodePort and find the NodePort port. Hit it using Node's IP. Delete the service and the pod
+### Convert the ClusterIP to NodePort for the same service and find the NodePort port. Hit service using Node's IP. Delete the service and the pod at the end.
 
 <details><summary>show</summary>
 <p>
@@ -89,8 +98,13 @@ nginx        NodePort    10.107.253.138   <none>        80:31931/TCP   3m
 
 ```bash
 wget -O- NODE_IP:31931 # if you're using Kubernetes with Docker for Windows/Mac, try 127.0.0.1
+#if you're using minikube, try minikube ip, then get the node ip such as 192.168.99.117
 ```
 
+```bash
+kubectl delete svc nginx # Deletes the service
+kbuectl delete pod nginx # Deletes the pod
+```
 </p>
 </details>
 
@@ -103,7 +117,44 @@ wget -O- NODE_IP:31931 # if you're using Kubernetes with Docker for Windows/Mac,
 ```bash
 kubectl run foo --image=dgkanatsios/simpleapp --labels=app=foo --port=8080 --replicas=3
 ```
+Or, you can use the more recent approach of creating the requested deployment as kubectl run has been deprecated.
 
+```bash
+kubectl create deploy foo --image=dgkanatsios/simpleapp --dry-run -o yaml > foo.yml
+
+vi foo.yml
+```
+
+Update the yaml to update the replicas and add container port.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: foo
+  name: foo
+spec:
+  replicas: 3 # Update this
+  selector:
+    matchLabels:
+      app: foo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: foo
+    spec:
+      containers:
+      - image: dgkanatsios/simpleapp
+        name: simpleapp
+        ports:                   # Add this
+          - containerPort: 8080  # Add this
+        resources: {}
+status: {}
+```
 </p>
 </details>
 
@@ -159,6 +210,8 @@ kubectl delete deploy foo
 
 ### Create an nginx deployment of 2 replicas, expose it via a ClusterIP service on port 80. Create a NetworkPolicy so that only pods with labels 'access: true' can access the deployment and apply it
 
+kubernetes.io > Documentation > Concepts > Services, Load Balancing, and Networking > [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+
 <details><summary>show</summary>
 <p>
 
@@ -185,6 +238,16 @@ spec:
     - podSelector: # from pods
         matchLabels: # with this label
           access: 'true' # 'true' *needs* quotes in YAML, apparently
+```
+
+```bash
+# Create the NetworkPolicy
+kubectl create -f policy.yaml
+
+# Check if the Network Policy has been created correctly
+# make sure that your cluster's network provider supports Network Policy (https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/#before-you-begin)
+kubectl run busybox --image=busybox --rm -it --restart=Never -- wget -O- http://nginx:80                       # This should not work
+kubectl run busybox --image=busybox --rm -it --restart=Never --labels=access=true -- wget -O- http://nginx:80  # This should be fine
 ```
 
 </p>

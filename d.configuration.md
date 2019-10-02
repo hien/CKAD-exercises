@@ -3,6 +3,8 @@
 
 ## ConfigMaps
 
+kubernetes.io > Documentation > Tasks > Configure Pods and Containers > [Configure a Pod to Use a ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/)
+
 ### Create a configmap named config with values foo=lala,foo2=lolo
 
 <details><summary>show</summary>
@@ -42,7 +44,7 @@ echo -e "foo3=lili\nfoo4=lele" > config.txt
 
 ```bash
 kubectl create cm configmap2 --from-file=config.txt
-kubectl get cm configmap2 -o yaml --export
+kubectl get cm configmap2 -o yaml
 ```
 
 </p>
@@ -221,7 +223,9 @@ cat var8 # will show val8
 
 ## SecurityContext
 
-### Create the YAML for an nginx pod that runs with the UID 101. No need to create the pod
+kubernetes.io > Documentation > Tasks > Configure Pods and Containers > [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+
+### Create the YAML for an nginx pod that runs with the user ID 101. No need to create the pod
 
 <details><summary>show</summary>
 <p>
@@ -293,6 +297,8 @@ status: {}
 
 ## Requests and limits
 
+kubernetes.io > Documentation > Tasks > Configure Pods and Containers > [Assign CPU Resources to Containers and Pods](https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/)
+
 ### Create an nginx pod with requests cpu=100m,memory=256Mi and limits cpu=200m,memory=512Mi
 
 <details><summary>show</summary>
@@ -306,6 +312,10 @@ kubectl run nginx --image=nginx --restart=Never --requests='cpu=100m,memory=256M
 </details>
 
 ## Secrets
+
+kubernetes.io > Documentation > Concepts > Configuration > [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+
+kubernetes.io > Documentation > Tasks > Inject Data Into Applications > [Distribute Credentials Securely Using Secrets](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/)
 
 ### Create a secret called mysecret with the values password=mypass
 
@@ -324,7 +334,7 @@ kubectl create secret generic mysecret --from-literal=password=mypass
 Create a file called username with the value admin:
 
 ```bash
-echo admin > username
+echo -n admin > username
 ```
 
 <details><summary>show</summary>
@@ -344,7 +354,13 @@ kubectl create secret generic mysecret2 --from-file=username
 
 ```bash
 kubectl get secret mysecret2 -o yaml --export
-echo YWRtaW4K | base64 -d # shows 'admin'
+echo YWRtaW4K | base64 -d # on MAC it is -D, which decodes the value and shows 'admin'
+```
+
+Alternative:
+
+```bash
+kubectl get secret mysecret2 -o jsonpath='{.data.username}{"\n"}' | base64 -d  # on MAC it is -D
 ```
 
 </p>
@@ -442,6 +458,8 @@ kubectl exec -it nginx -- env | grep USERNAME | cut -d '=' -f 2 # will show 'adm
 
 ## ServiceAccounts
 
+kubernetes.io > Documentation > Tasks > Configure Pods and Containers > [Configure Service Accounts for Pods](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/)
+
 ### See all the service accounts of the cluster in all namespaces
 
 <details><summary>show</summary>
@@ -460,7 +478,7 @@ kubectl get sa --all-namespaces
 <p>
 
 ```bash
-kubectl create sa 'myuser' --dry-run -o yaml
+kubectl create sa myuser
 ```
 
 Alternatively:
